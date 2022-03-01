@@ -9,11 +9,13 @@
 #define SERVO_MIN_US 500
 #define SERVO_MAX_US 2400
 #define SERVO_HERTZ 50
-#define SERVO_PIN 23
+#define SERVO_PIN 32
 
-#define BT_NAME "DoorMotor" // BlueTooth Name
+#define BT_NAME "DoorMotor"
 #define ACT_TIMER 5000
 #define LOOP_CYCLE 1000
+#define PW_LED_PIN 26
+#define BT_LED_PIN 27
 
 BluetoothSerial SerialBT;
 Servo servo;
@@ -25,10 +27,20 @@ void setup() {
   SerialBT.begin(BT_NAME);  
   servo.setPeriodHertz(SERVO_HERTZ);
   servo.attach(SERVO_PIN, SERVO_MIN_US, SERVO_MAX_US);
+  pinMode(PW_LED_PIN ,OUTPUT);
+  pinMode(BT_LED_PIN ,OUTPUT);
+  Serial.println("setuped.");
 }
 
 void loop() {
+  
   String readBuf="";
+
+  if (SerialBT.hasClient()) {
+    setColorLed(BT_LED_PIN);
+  } else {
+    setColorLed(PW_LED_PIN);
+  }
   
   if (SerialBT.available()) {
     
@@ -61,6 +73,10 @@ void loop() {
   }
 
   delay(LOOP_CYCLE);
+
+  setColorLed(0);
+
+  Serial.println("looped.");
 }
 
 void setOpenPos() {
@@ -74,5 +90,18 @@ void setInitPos() {
   for (pos = 180; pos > 0; pos -= 1) { // sweep from 180 degrees to 0 degrees
     servo.write(pos);
     delay(2);
+  }
+}
+
+void setColorLed(int ledPin) {
+  if (ledPin == PW_LED_PIN) {
+    digitalWrite(PW_LED_PIN,HIGH);
+    digitalWrite(BT_LED_PIN,LOW);
+  } else if (ledPin == BT_LED_PIN) {
+    digitalWrite(PW_LED_PIN,LOW);
+    digitalWrite(BT_LED_PIN,HIGH);
+  } else {
+    digitalWrite(PW_LED_PIN,LOW);
+    digitalWrite(BT_LED_PIN,LOW);
   }
 }
